@@ -1,0 +1,123 @@
+a. יצירת שאילתות: 
+CREATE TABLE category (
+    category_id INT PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+
+CREATE TABLE products (
+  product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  price NUMERIC,
+	category_id INT,
+	FOREIGN KEY (category_id) REFERENCES category(category_id)  
+);
+
+
+CREATE TABLE nutritions (
+  nutrition_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  calories NUMERIC,
+	fats NUMERIC,
+	sugar NUMERIC,
+	product_id INT,
+	FOREIGN KEY (product_id) REFERENCES products(product_id)  
+);
+
+
+CREATE TABLE orders (
+    orders_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date_time TEXT NOT NULL,
+    address TEXT NOT NULL,     
+	customer_name VARCHAR(100),
+	customer_ph NUMERIC,
+	total_price NUMERIC
+);
+
+
+CREATE TABLE products_orders (
+  orders_id INT,
+	product_id INT,
+  amount NUMERIC, 
+  PRIMARY KEY (orders_id, product_id),
+	FOREIGN KEY (orders_id) REFERENCES orders(orders_id),  
+	FOREIGN KEY (product_id) REFERENCES products(product_id) 
+);
+
+
+b. ?איזה קשרים יש בין הטבלאות
+   קשר יחיד לרבים  
+
+d. 
+i. הצג את כל הפריטים ואת הערך התזונתי שלהם + הקטגוריה שלהם:
+SELECT products.*, 
+category.name AS name_category, 
+nutritions.calories, 
+nutritions.fats, 
+nutritions.sugar
+FROM  products
+JOIN  category ON products.category_id = category.category_id
+JOIN nutritions ON products.product_id = nutritions.product_id;
+
+ii. הצג את כל ההזמנות, ובכל הזמנה הצג את כל פרטי המוצר
+
+
+iii. הוסף מוצר נוסף לכל הזמנה, INSERT:
+INSERT INTO products_orders (orders_id, product_id, amount) VALUES (3, 25, 4);
+
+iv. עדכן את עלות כל ההזמנות )כמות X מחיר המוצר(, השתמש ב - UPDATE
+INSERT INTO products_orders (orders_id, product_id, amount) VALUES (3, 25, 4);
+
+v. מהי ההזמנה הכי יקרה? הכי זולה? ממוצע?
+ההזמה הכי יקרה:
+SELECT  MAX(total_price) AS max_price
+FROM orders
+
+ההזמנה הכי זולה:
+SELECT  MIN(total_price) AS min_price
+FROM orders
+
+ממוציע של ההזמנות:
+SELECT  AVG(total_price) AS avg_price
+FROM orders
+
+vi. מי הלקוח שהזמין הכי הרבה פעמים?
+SELECT customer_name, max(total_price) AS ordered_most   
+FROM orders 
+WHERE customer_name = (SELECT max(customer_name) FROM  orders);
+
+vii. איזה מוצר נמכר הכי הרבה? הכי פחות? ממוצע?  Orange Juice,  Carrot and Water Bottle
+המוצר הכי נמכר:
+SELECT name, MAX(price) AS max_price
+FROM products
+
+הכי פחות נמכר:
+SELECT name, MIN(price) AS min_price
+FROM products
+
+ממוצע ההזמנות:
+SELECT avg(price) AS avg_price
+FROM products
+
+
+viii. ?איזה קטגוריה של מוצרים נמכרים הכי הרבה? הכי פחות?
+:נמכרים הכי הרבה
+SELECT category.name, SUM(products.price * products_orders.amount) AS total_sales
+FROM products_orders 
+JOIN products  ON products_orders.product_id = products.product_id
+JOIN category ON products.category_id = category.category_id
+GROUP BY category.name
+ORDER BY total_sales DESC
+LIMIT 1; 
+
+נמכרים הכי פחות:
+SELECT category.name, SUM(products.price * products_orders.amount) AS total_sales
+FROM products_orders 
+JOIN products  ON products_orders.product_id = products.product_id
+JOIN category ON products.category_id = category.category_id
+GROUP BY category.name
+ORDER BY total_sales ASC
+LIMIT 1; 
+
+
+
